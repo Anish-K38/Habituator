@@ -1,0 +1,15 @@
+{
+  "appId": "com.habittracker.app",
+  "appName": "HabitTracker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#7C3AED",
+      "showSpinner": false
+    }
+  }
+}
