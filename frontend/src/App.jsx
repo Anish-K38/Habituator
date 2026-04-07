@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AppProvider, useApp } from './context/AppContext';
+import { useTheme } from './hooks/useTheme';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Onboarding from './pages/Onboarding';
@@ -10,6 +11,13 @@ import TimeLog from './pages/TimeLog';
 import Trends from './pages/Trends';
 import Achievements from './pages/Achievements';
 import Settings from './pages/Settings';
+import MonthlyWrapped from './pages/MonthlyWrapped';
+
+// Applies the CSS data-theme attribute based on efficiency score
+function ThemeController() {
+  useTheme();
+  return null;
+}
 
 function ProtectedRoute({ children }) {
   const { user } = useApp();
@@ -20,6 +28,7 @@ function ProtectedRoute({ children }) {
 function AppRoutes() {
   return (
     <>
+      <ThemeController />
       <Toaster
         position="top-center"
         toastOptions={{
@@ -51,6 +60,7 @@ function AppRoutes() {
           <Route path="/achievements" element={<ProtectedRoute><Achievements /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
         </Route>
+        <Route path="/wrapped" element={<ProtectedRoute><MonthlyWrapped /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

@@ -1,34 +1,90 @@
 import { useApp } from '../context/AppContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { CreditCard, Clock, TrendingUp, Trophy, ChevronRight, Zap } from 'lucide-react';
+import VirtualPet from '../components/VirtualPet';
 
-function ScoreRing({ score, color }) {
+function ScoreRing({ score, trueScore, color }) {
   const r = 54;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (score / 100) * circ;
-  const strokeColor = color === 'green' ? 'var(--green)' : color === 'yellow' ? 'var(--yellow)' : 'var(--red)';
+  
+  // Normalization for the main progress arc
+  const displayScore = Math.max(0, Math.min(100, trueScore));
+  const offset = circ - (displayScore / 100) * circ;
+  
+  // Secondary arc for over-performance (>100%)
+  const overflowScore = trueScore > 100 ? Math.min(100, trueScore - 100) : 0;
+  const overflowOffset = circ - (overflowScore / 100) * circ;
+
+  let strokeColor = 'var(--primary)';
+  if (color === 'gold') strokeColor = 'var(--gold)';
+  else if (color === 'green') strokeColor = 'var(--green)';
+  else if (color === 'yellow') strokeColor = 'var(--yellow)';
+  else if (color === 'neon-red') strokeColor = 'var(--neon-red)';
+  else strokeColor = 'var(--red)';
 
   return (
-    <div className="score-ring-wrap">
+    <div className="score-ring-wrap" style={{ position: 'relative' }}>
       <svg width="140" height="140" viewBox="0 0 140 140">
         <circle cx="70" cy="70" r={r} fill="none" stroke="var(--border-subtle)" strokeWidth="10" />
+        
+        {/* Main Arc */}
         <circle
           cx="70" cy="70" r={r}
           fill="none" stroke={strokeColor} strokeWidth="10"
           strokeDasharray={circ} strokeDashoffset={offset}
           strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1)' }}
+          style={{ 
+            transition: 'stroke-dashoffset 1s ease, stroke 0.3s ease',
+            filter: color === 'neon-red' ? 'drop-shadow(0 0 5px var(--neon-red))' : 'none'
+          }}
         />
+
+        {/* Overflow Arc (Golden Layer) */}
+        {trueScore > 100 && (
+          <circle
+            cx="70" cy="70" r={r}
+            fill="none" stroke="var(--gold)" strokeWidth="4"
+            strokeDasharray={circ} strokeDashoffset={overflowOffset}
+            strokeLinecap="round"
+            style={{ 
+               transition: 'stroke-dashoffset 1.5s ease',
+               filter: 'drop-shadow(0 0 8px var(--gold))'
+            }}
+          />
+        )}
       </svg>
-      <div className="score-ring-label">
-        <span style={{ fontSize: '2rem', fontWeight: 800, color: strokeColor }}>{score}%</span>
+      <div className="score-ring-label" style={{ 
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none'
+      }}>
+        <span style={{ 
+          fontSize: '1.8rem', 
+          fontWeight: 900, 
+          color: 'white',
+          textShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          lineHeight: 1
+        }}>
+          {trueScore}%
+        </span>
       </div>
     </div>
   );
 }
 
 export default function Dashboard() {
-  const { user, efficiencyScore, efficiencyLabel, efficiencyColor, todaySpent, todayHours, settings, logout } = useApp();
+  const { 
+    user, 
+    efficiencyScore = 0, 
+    trueEfficiency = 0, 
+    moneyScore = 0, 
+    timeScore = 0, 
+    efficiencyLabel = 'Loading...', 
+    efficiencyColor = 'red', 
+    todaySpent = 0, 
+    todayHours = 0, 
+    settings = { currency: '₹', dailyBudget: 1000, dailyHours: 6 }, 
+    logout 
+  } = useApp();
   const navigate = useNavigate();
 
   if (!user) { navigate('/', { replace: true }); return null; }
@@ -45,75 +101,132 @@ export default function Dashboard() {
   return (
     <div className="animate-fadeIn">
       {/* Header */}
-      <div className="flex justify-between items-center mb-5">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 style={{ fontSize: '1.4rem' }}>Good {getGreeting()}, {user.name?.split(' ')[0]}! 👋</h1>
-          <p className="text-sm text-muted">{new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Good {getGreeting()}, {user.name?.split(' ')[0]}! 👋</h1>
+          <p className="text-xs text-muted font-medium uppercase tracking-wider">{new Date().toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
         </div>
-        <button onClick={logout} className="btn btn-ghost btn-sm">Logout</button>
+        <button onClick={logout} className="btn btn-ghost btn-sm" style={{ background: 'var(--primary-100)', color: 'var(--primary)' }}>Logout</button>
       </div>
 
-      {/* Efficiency Score Card */}
-      <div className="card card-gradient mb-4" style={{
-        background: 'var(--gradient-main)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '28px 20px',
-        gap: 16,
-        textAlign: 'center',
-      }}>
-        <div className="flex items-center gap-3">
-          <Zap size={20} color="rgba(255,255,255,0.7)" />
-          <span style={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600, fontSize: '0.9rem', letterSpacing: '0.05em' }}>
-            EFFICIENCY SCORE
-          </span>
-        </div>
-        <div style={{
-          background: 'rgba(255,255,255,0.15)',
-          borderRadius: '50%',
-          padding: 8,
-          backdropFilter: 'blur(8px)',
+      <div className="bento-grid">
+        {/* BIG CARD: Efficiency Score (2x2) */}
+        <div className="glass-card span-col-2 span-row-2 card-gradient" style={{
+          background: efficiencyColor === 'neon-red' ? 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)' : 'var(--gradient-main)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '32px 24px', gap: 20, textAlign: 'center', overflow: 'hidden'
         }}>
-          <ScoreRing score={efficiencyScore} color={efficiencyColor} />
-        </div>
-        <div>
-          <span className={badgeClass} style={{ fontSize: '0.8rem', padding: '4px 16px' }}>{efficiencyLabel}</span>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem', marginTop: 12, lineHeight: 1.6 }}>
-            You spent <strong style={{ color: 'white' }}>{settings.currency}{todaySpent.toFixed(2)}</strong> today
-            and logged <strong style={{ color: 'white' }}>{todayHours.toFixed(1)}</strong> productive hours.
-          </p>
-        </div>
-      </div>
+          <div className="flex items-center gap-2 opacity-80">
+            <Zap size={18} color="white" fill="white" />
+            <span style={{ color: 'white', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em' }}>EFFICIENCY</span>
+          </div>
+          
+          <div style={{
+            background: 'rgba(255,255,255,0.12)',
+            borderRadius: '50%',
+            padding: 12,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.2)'
+          }}>
+            <ScoreRing score={efficiencyScore} trueScore={trueEfficiency} color={efficiencyColor} />
+          </div>
 
-      {/* Quick access grid */}
-      <p className="section-title">Quick Access</p>
-      <div className="grid-2 mb-4">
-        {quickLinks.map(({ to, icon: Icon, label, color, bg, value, sub }) => (
-          <Link key={to} to={to} style={{ textDecoration: 'none' }}>
-            <div className="card" style={{ padding: '18px 16px', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Icon size={18} color={color} />
-                </div>
-                <ChevronRight size={16} color="var(--text-muted)" />
+          <div className="flex flex-col items-center gap-4 w-full">
+            <span className={badgeClass} style={{ 
+              fontSize: '0.75rem', padding: '6px 20px', fontWeight: 800,
+              background: efficiencyColor === 'gold' ? 'var(--gold)' : undefined,
+              color: efficiencyColor === 'gold' ? 'black' : undefined,
+              boxShadow: efficiencyColor === 'gold' ? 'var(--gold-glow)' : undefined
+            }}>
+              {efficiencyLabel.toUpperCase()}
+            </span>
+            
+            <div className="flex justify-center gap-3 w-full">
+              <div className="glass-bg" style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: 12, flex: 1 }}>
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', fontWeight: 800, marginBottom: 2 }}>MONEY</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'white' }}>{Math.round(moneyScore)}%</div>
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>{value}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{sub}</div>
-              <div style={{ fontSize: '0.8rem', color, fontWeight: 600, marginTop: 4 }}>{label}</div>
+              <div className="glass-bg" style={{ background: 'rgba(255,255,255,0.1)', padding: '10px 16px', borderRadius: 12, flex: 1 }}>
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', fontWeight: 800, marginBottom: 2 }}>TIME</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: 'white' }}>{Math.round(timeScore)}%</div>
+              </div>
+            </div>
+
+            {trueEfficiency <= -100 && (
+               <div className="animate-pulse-soft" style={{ 
+                 padding: '12px', borderRadius: 12, 
+                 background: 'rgba(255,0,51,0.25)', border: '1px solid var(--neon-red)',
+                 color: 'white', fontSize: '0.8rem', fontWeight: 700
+               }}>
+                 ⚠️ CRITICAL INEFFICIENCY
+               </div>
+            )}
+          </div>
+        </div>
+
+        {/* COMPANION CARD (2x1) */}
+        <div className="glass-card span-col-2" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: 20 }}>
+          <VirtualPet variant="compact" />
+          <div style={{ flex: 1 }}>
+            <h3 style={{ color: 'var(--primary)', marginBottom: 4, fontSize: '1rem', fontWeight: 800 }}>Companion</h3>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5, fontWeight: 500 }}>
+              Your streak of <strong>{useApp().streak?.count || 0} days</strong> is powering evolution!
+            </p>
+            <Link to="/achievements" className="flex items-center gap-1 mt-2 font-bold color-primary" style={{ fontSize: '0.75rem', textDecoration: 'none', color: 'var(--primary)' }}>
+              Check Evolution <ChevronRight size={14} />
+            </Link>
+          </div>
+        </div>
+
+        {/* SUMMARY CARD (2x1) */}
+        <div className="glass-card span-col-2" style={{ 
+          padding: '24px', background: 'var(--gradient-soft)', border: '1px dashed var(--primary-200)',
+          display: 'flex', flexDirection: 'column', justifyContent: 'center'
+        }}>
+          <h3 style={{ color: 'var(--primary)', marginBottom: 12, fontSize: '0.9rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 8 }}>
+            📊 TODAY'S SUMMARY
+          </h3>
+          <div className="flex justify-between items-end">
+            <div className="flex flex-col gap-2">
+               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                 Remaining: <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{settings.currency}{Math.max(0, settings.dailyBudget - todaySpent).toFixed(0)}</span>
+               </div>
+               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                 Work needed: <span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{Math.max(0, settings.dailyHours - todayHours).toFixed(1)}h</span>
+               </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>{efficiencyScore}%</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)' }}>AVG EFFICIENCY</div>
+            </div>
+          </div>
+        </div>
+
+        {/* QUICK ACCESS (1x1 each) */}
+        {quickLinks.map(({ to, icon: Icon, label, color, bg, value, sub }) => (
+          <Link key={to} to={to} style={{ textDecoration: 'none' }} className="bento-item">
+            <div className="glass-card" style={{ padding: '20px ripple', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '20px' }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <Icon size={20} color={color} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)' }}>{value}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, marginTop: 4 }}>{label.toUpperCase()}</div>
+              </div>
             </div>
           </Link>
         ))}
       </div>
 
-      {/* Daily summary */}
-      <div className="card" style={{ background: 'var(--gradient-soft)', border: '1px dashed var(--primary-200)' }}>
-        <h3 className="mb-3" style={{ color: 'var(--primary)' }}>📊 Today's Summary</h3>
-        <p className="text-sm" style={{ lineHeight: 1.8 }}>
-          💰 Budget remaining: <strong>{settings.currency}{Math.max(0, settings.dailyBudget - todaySpent).toFixed(2)}</strong><br />
-          ⏱️ Hours remaining: <strong>{Math.max(0, settings.dailyHours - todayHours).toFixed(1)} hrs</strong><br />
-          ⚡ Efficiency: <strong>{efficiencyScore}%</strong> ({efficiencyLabel})
-        </p>
+      {/* Monthly Wrapped Feature Teaser */}
+      <div className="glass-card mt-6 p-6 flex items-center justify-between" style={{ background: 'var(--gradient-card)', color: 'white', border: 'none' }}>
+        <div>
+          <h4 style={{ fontWeight: 800, marginBottom: 4 }}>Monthly Wrapped is Here! 🎬</h4>
+          <p style={{ fontSize: '0.8rem', opacity: 0.9 }}>See your highs and lows from last month in a stunning recap.</p>
+        </div>
+        <Link to="/wrapped" className="btn btn-sm" style={{ background: 'white', color: 'var(--primary)', fontWeight: 800, padding: '8px 16px' }}>
+          VIEW RECAP
+        </Link>
       </div>
     </div>
   );

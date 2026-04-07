@@ -1,5 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, CreditCard, Clock, TrendingUp, Trophy, Settings, Zap } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  CreditCard, 
+  Clock, 
+  TrendingUp, 
+  Trophy, 
+  Settings, 
+  Zap,
+  Moon,
+  Sun
+} from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,18 +22,20 @@ const navItems = [
 ];
 
 export default function BottomNav() {
+  const { isDarkMode, toggleDarkMode } = useApp();
   return (
     <nav className="bottom-nav" role="navigation" aria-label="Main navigation">
       {/* Logo (desktop only) */}
-      <div className="nav-logo" style={{ display: 'none' }}>
+      <div className="nav-logo">
         <div style={{
-          width: 36, height: 36, borderRadius: 10,
+          width: 42, height: 42, borderRadius: 12,
           background: 'var(--gradient-main)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(124,58,237,0.2)',
         }}>
-          <Zap size={20} color="white" fill="white" />
+          <Zap size={22} color="white" fill="white" />
         </div>
-        <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1rem' }}>HabitTracker</span>
+        <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '1.2rem', letterSpacing: '0.05em' }}>HABITUATOR</span>
       </div>
 
       {navItems.map(({ to, icon: Icon, label }) => (
@@ -36,6 +49,26 @@ export default function BottomNav() {
           <span>{label}</span>
         </NavLink>
       ))}
+
+      {/* Theme Toggle (Desktop Sidebar Bottom) */}
+      <div className="nav-theme-toggle md-show">
+        <button 
+          onClick={toggleDarkMode}
+          className="nav-item"
+          style={{ 
+            marginTop: 'auto', 
+            width: '100%', 
+            border: 'none', 
+            background: 'none', 
+            cursor: 'pointer',
+            color: 'inherit'
+          }}
+          aria-label="Toggle Dark Mode"
+        >
+          {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
+          <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+        </button>
+      </div>
     </nav>
   );
 }

@@ -43,6 +43,7 @@ export function AppProvider({ children }) {
     dailyBudget: 1000,
     dailyHours: 6,
     moneyWeight: 50,
+    strictMode: false,
   });
   const [achievements, setAchievements] = useState({
     firstExpense: false,
@@ -53,7 +54,17 @@ export function AppProvider({ children }) {
     goalSetter: false,
   });
   const [streak, setStreak] = useState({ count: 0, lastDate: null });
+  const [isDarkMode, setIsDarkMode] = useLocalStorage('ht_dark_mode', false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  // Sync color scheme with document element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-color-scheme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+
+  const toggleDarkMode = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+  }, [setIsDarkMode]);
 
   // Hydrate Data on Login
   useEffect(() => {
@@ -67,6 +78,7 @@ export function AppProvider({ children }) {
           dailyBudget: data.settings.daily_budget || 1000,
           dailyHours: data.settings.daily_hours || 6,
           moneyWeight: data.settings.money_weight || 50,
+          strictMode: data.settings.strict_mode || false,
         });
         if (data.stats) {
           setStreak({
@@ -138,18 +150,31 @@ export function AppProvider({ children }) {
   const todayLogs = timeLogs.filter(l => l.date === today);
   const todayHours = todayLogs.reduce((sum, l) => sum + Number(l.hours), 0);
 
+  // Advanced Formula: α(Money) + β(Time)
+  // Allow for negative and overflow scores
   const moneyScore = settings.dailyBudget > 0
-    ? Math.max(0, Math.min(100, ((settings.dailyBudget - todaySpent) / settings.dailyBudget) * 100))
+    ? ((settings.dailyBudget - todaySpent) / settings.dailyBudget) * 100
     : 100;
   const timeScore = settings.dailyHours > 0
-    ? Math.max(0, Math.min(100, (todayHours / settings.dailyHours) * 100))
+    ? (todayHours / settings.dailyHours) * 100
     : 0;
+
   const mw = settings.moneyWeight / 100;
   const tw = 1 - mw;
-  const efficiencyScore = Math.round(moneyScore * mw + timeScore * tw);
 
-  const efficiencyLabel = efficiencyScore >= 70 ? 'Efficient' : efficiencyScore >= 40 ? 'Moderate' : 'Needs Work';
-  const efficiencyColor = efficiencyScore >= 70 ? 'green' : efficiencyScore >= 40 ? 'yellow' : 'red';
+  // Internal "True" score with full range
+  let rawScore = Math.round(moneyScore * mw + timeScore * tw);
+
+  // Apply strictMode limits (No negative unless enabled, Cap at -100)
+  const trueEfficiency = settings.strictMode 
+    ? Math.max(-100, rawScore) 
+    : Math.max(0, rawScore);
+
+  // Visual/Normalized score (Capped 0-100 for basic ring UI)
+  const efficiencyScore = Math.max(0, Math.min(100, trueEfficiency));
+
+  const efficiencyLabel = trueEfficiency >= 100 ? 'Peak Excellence' : trueEfficiency >= 70 ? 'Efficient' : trueEfficiency >= 40 ? 'Moderate' : trueEfficiency < 0 ? 'Inefficient (Hardcore)' : 'Needs Work';
+  const efficiencyColor = trueEfficiency >= 100 ? 'gold' : trueEfficiency >= 70 ? 'green' : trueEfficiency >= 40 ? 'yellow' : trueEfficiency < 0 ? 'neon-red' : 'red';
 
   const weeklyStats = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
@@ -340,9 +365,10 @@ export function AppProvider({ children }) {
     settings, updateSettings,
     achievements, setAchievements,
     streak,
-    efficiencyScore, efficiencyLabel, efficiencyColor,
+    efficiencyScore, trueEfficiency, moneyScore, timeScore, efficiencyLabel, efficiencyColor,
     weeklyStats, weeklySpent, weeklyHours,
-    today, isDataLoaded
+    today, isDataLoaded,
+    isDarkMode, toggleDarkMode
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

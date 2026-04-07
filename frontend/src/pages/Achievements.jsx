@@ -1,6 +1,7 @@
 import { useApp } from '../context/AppContext';
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import VirtualPet from '../components/VirtualPet';
 
 const BADGE_DEFS = [
   {
@@ -68,17 +69,23 @@ export default function Achievements() {
         </div>
       </div>
 
-      {/* Streak card */}
-      <div className="card mb-4" style={{ background: 'linear-gradient(135deg, #F97316 0%, #EF4444 100%)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ fontSize: '2.5rem' }}>🔥</div>
-        <div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>{streak.count}</div>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.9rem' }}>Day Streak</p>
+      {/* Virtual Pet — full evolution panel */}
+      <div className="card mb-4" style={{
+        background: 'var(--gradient-soft)',
+        border: '1px solid var(--border)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 12,
+        padding: '28px 20px',
+        textAlign: 'center',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+            🐾 Your Companion · {streak.count} day streak
+          </span>
         </div>
-        <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem' }}>Current efficiency</p>
-          <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>{efficiencyScore}%</div>
-        </div>
+        <VirtualPet variant="full" />
       </div>
 
       {/* Badges grid */}
