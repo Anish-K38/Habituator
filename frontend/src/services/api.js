@@ -1,5 +1,7 @@
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 export async function apiSignup(name, email, password) {
-  const res = await fetch('/api/v1/auth/signup', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, password })
@@ -10,7 +12,7 @@ export async function apiSignup(name, email, password) {
 }
 
 export async function apiLogin(email, password) {
-  const res = await fetch('/api/v1/auth/login', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -21,7 +23,7 @@ export async function apiLogin(email, password) {
 }
 
 export async function apiLogout(token) {
-  const res = await fetch('/api/v1/auth/logout', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -38,7 +40,7 @@ export async function apiLogout(token) {
 // ----- Application Data & Syncing -----
 
 export async function apiFetchAppData(token) {
-  const res = await fetch('/api/v1/data/all', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/all`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   if (!res.ok) throw new Error('Fetch failed');
@@ -46,7 +48,7 @@ export async function apiFetchAppData(token) {
 }
 
 export async function apiCreateExpense(token, expenseData) {
-  const res = await fetch('/api/v1/data/expenses', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/expenses`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +61,7 @@ export async function apiCreateExpense(token, expenseData) {
 }
 
 export async function apiDeleteExpense(token, expenseId) {
-  const res = await fetch(`/api/v1/data/expenses/${expenseId}`, {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/expenses/${expenseId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }
   });
@@ -68,7 +70,7 @@ export async function apiDeleteExpense(token, expenseId) {
 }
 
 export async function apiCreateTimeLog(token, logData) {
-  const res = await fetch('/api/v1/data/timelogs', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/timelogs`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -81,7 +83,7 @@ export async function apiCreateTimeLog(token, logData) {
 }
 
 export async function apiDeleteTimeLog(token, logId) {
-  const res = await fetch(`/api/v1/data/timelogs/${logId}`, {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/timelogs/${logId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }
   });
@@ -90,7 +92,7 @@ export async function apiDeleteTimeLog(token, logId) {
 }
 
 export async function apiUpdateSettings(token, settingsData) {
-  const res = await fetch('/api/v1/data/settings', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/settings`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -103,7 +105,7 @@ export async function apiUpdateSettings(token, settingsData) {
 }
 
 export async function apiUpdateStats(token, statsData) {
-  const res = await fetch('/api/v1/data/stats', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/stats`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -116,7 +118,7 @@ export async function apiUpdateStats(token, statsData) {
 }
 
 export async function apiCreateReminder(token, reminderData) {
-  const res = await fetch('/api/v1/data/reminders', {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/reminders`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -129,7 +131,7 @@ export async function apiCreateReminder(token, reminderData) {
 }
 
 export async function apiDeleteReminder(token, reminderId) {
-  const res = await fetch(`/api/v1/data/reminders/${reminderId}`, {
+  const res = await fetch(`${API_BASE_URL}/api/v1/data/reminders/${reminderId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }
   });

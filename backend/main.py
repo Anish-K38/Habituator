@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
 from routes import auth, data
 import models.app # Ensure SQLAlchemy registers the new tables
+import os
 
 # Create all database tables
 # In production, use Alembic for migrations instead
@@ -15,9 +16,16 @@ app = FastAPI(
 )
 
 # Allow CORS for front-end
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    frontend_url
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], # Adjust for production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
