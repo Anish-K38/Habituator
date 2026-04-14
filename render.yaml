@@ -12,16 +12,17 @@ services:
           property: connectionString
       - key: FRONTEND_URL
         fromService:
-          type: static
+          type: web
           name: habittracker-frontend
           property: host
     rootDir: backend
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: habittracker-frontend
+    runtime: static
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
         fromService:
@@ -29,6 +30,10 @@ services:
           name: habittracker-backend
           property: host
     rootDir: frontend
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
 
 databases:
   - name: habittracker-db
