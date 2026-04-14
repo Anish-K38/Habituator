@@ -1,0 +1,35 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: habittracker-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: habittracker-db
+          property: connectionString
+      - key: FRONTEND_URL
+        fromService:
+          type: static
+          name: habittracker-frontend
+          property: host
+    rootDir: backend
+
+  # Frontend Static Site
+  - type: static
+    name: habittracker-frontend
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: habittracker-backend
+          property: host
+    rootDir: frontend
+
+databases:
+  - name: habittracker-db
+    plan: free
